@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Portfolio - Lab 6</title>
+  <link rel="stylesheet" href="style3.css" />
+</head>
+<body>
+  <header>
+    <h1 id="main-title">Fajar Mubeen</h1>
+    <p class="tagline">Web Developer • Creative Designer • Lifelong Learner</p>
+  </header>
+
+  <section class="about">
+    <h2>About Me</h2>
+    <p>
+      Hi,I'm a passionate web development student who loves bringing ideas to life on the web. 
+      I enjoy designing clean, user-friendly websites using HTML, CSS, and JavaScript. 
+      I’m constantly learning new tools and improving my skills to create websites that are both functional and visually appealing.
+    </p>
+  </section>
+
+  <section class="projects">
+    <h2>Projects</h2>
+
+    <article class="project-card">
+      <h3>Portfolio Website</h3>
+      <p>
+        A personal website showcasing my work and skills. 
+        Built with HTML, CSS, and basic JavaScript, this project helped me understand responsive design 
+        and the importance of consistent styling using the CSS box model.
+      </p>
+    </article>
+
+    <article class="project-card">
+      <h3>To-Do List App</h3>
+      <p>
+        A simple interactive To-Do List built using JavaScript and DOM manipulation. 
+        It allows users to add, mark complete, and delete tasks. 
+        This project improved my understanding of event handling and layout organization.
+      </p>
+    </article>
+
+    <article class="project-card">
+      <h3>Travel Blog Page</h3>
+      <p>
+        A responsive travel blog layout created using Flexbox and CSS Grid. 
+        It includes images, text sections, and navigation links, designed to look good on both desktop and mobile screens.
+      </p>
+    </article>
+  </section>
+
+  <footer>
+    <p>© <span id="year"></span> Alex Johnson — Built for Lab 6</p>
+  </footer>
+
+  <script>
+    // small script to show current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
+
