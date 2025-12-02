@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workshop Feedback</title>
+</head>
+<body>
+
+  <h1>Digital Art Workshop Feedback</h1>
+
+  <form action="/submit" method="POST" enctype="multipart/form-data">
+
+    <!-- Name -->
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" placeholder="Enter your name"
+           required aria-label="Full name" tabindex="1">
+
+    <br><br>
+
+    <!-- Email -->
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" placeholder="Enter your email"
+           required aria-label="Email address" tabindex="2">
+
+    <br><br>
+
+    <!-- Rating -->
+    <label for="rating">Rate the workshop:</label>
+    <select id="rating" name="rating" required tabindex="3">
+      <option value="">Choose rating</option>
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+    </select>
+
+    <br><br>
+
+    <!-- Written Feedback -->
+    <label for="feedback">Feedback:</label><br>
+    <textarea id="feedback" name="feedback" rows="4" cols="50" 
+              placeholder="Write your feedback here..." 
+              aria-label="Written feedback" tabindex="4"></textarea>
+
+    <br><br>
+
+    <!-- Artwork Upload -->
+    <label for="art">Upload your artwork:</label>
+    <input type="file" id="art" name="art" accept="image/*"
+           aria-label="Upload artwork image" tabindex="5">
+
+    <br><br>
+
+    <!-- Preferred Medium -->
+    <p>Preferred medium:</p>
+
+    <label>
+      <input type="radio" name="medium" value="canvas" tabindex="6"> Canvas
+    </label>
+
+    <label>
+      <input type="radio" name="medium" value="video" tabindex="7"> Video
+    </label>
+
+    <label>
+      <input type="radio" name="medium" value="audio" tabindex="8"> Audio
+    </label>
+
+    <br><br>
+
+    <!-- Recap Video -->
+    <video width="400" controls tabindex="9">
+      <source src="recap.mp4" type="video/mp4">
+      Your browser does not support video. Please download it.
+    </video>
+
+    <br><br>
+
+    <!-- Submit -->
+    <button type="submit" tabindex="10">Submit Feedback</button>
+
+  </form>
+
+</body>
+</html>

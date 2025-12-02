@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Quiz</title>
+</head>
+<body>
+
+<h2>Quiz</h2>
+
+<p>Q1: What is 2 + 2?</p>
+<input id="answer" type="text" placeholder="Your answer">
+
+<button id="checkBtn">Check Answer</button>
+
+<p id="result"></p>
+
+<script>
+document.getElementById("checkBtn").addEventListener("click", function () {
+  const userAnswer = document.getElementById("answer").value;
+
+  if (userAnswer == 4) {
+    document.getElementById("result").textContent = "Correct! 🎉";
+  } else {
+    document.getElementById("result").textContent = "Wrong! Try again.";
+  }
+});
+</script>
+
+</body>
+</html>
