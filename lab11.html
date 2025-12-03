@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lab 11 — Neon Sketch Studio + Aurora SVG</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg1:#0f1724; --bg2:#071129; --accent:#7c3aed; --accent2:#06b6d4;
+      --glass: rgba(255,255,255,0.06);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;
+      background: linear-gradient(160deg,var(--bg1),var(--bg2));
+      color:#e6eef8; min-height:100vh; display:flex; gap:20px; padding:24px;
+      align-items:flex-start; justify-content:center;
+    }
+
+    /* Layout */
+    .panel{
+      width:900px; background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:14px; padding:18px; box-shadow: 0 10px 40px rgba(2,6,23,0.7);
+      display:grid; grid-template-columns: 1fr 340px; gap:18px;
+    }
+
+    /* Left: Canvas area */
+    .studio{
+      border-radius:10px; overflow:hidden; position:relative; background:linear-gradient(180deg,#07112620,#07112600);
+      padding:10px; display:flex; flex-direction:column; gap:10px;
+    }
+    .stage {
+      border-radius:8px; background:linear-gradient(180deg,#071029,#071029);
+      position:relative; flex:1; display:flex; align-items:center; justify-content:center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    canvas { background: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.02), transparent 10%), repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 40px); border-radius:6px; max-width:100%; height:auto; }
+
+    /* Right: Controls + SVG preview */
+    .controls{
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .card{
+      background:var(--glass); border-radius:10px; padding:12px; backdrop-filter: blur(6px);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    label{font-size:13px; color:#cfe6ff; margin-right:6px}
+    .palette{display:flex; gap:8px}
+    .swatch{width:34px; height:34px; border-radius:8px; cursor:pointer; box-shadow:0 4px 10px rgba(2,6,23,0.6); border:2px solid rgba(255,255,255,0.06)}
+    input[type=range]{width:140px}
+
+    button.btn{
+      padding:8px 12px; border-radius:8px; border:none; cursor:pointer;
+      background:linear-gradient(90deg,var(--accent),var(--accent2)); color:white; font-weight:600;
+      box-shadow:0 6px 16px rgba(124,58,237,0.18);
+    }
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06); color:#d5eaff}
+    small{opacity:.85; color:#cfe6ff}
+
+    /* Tool icons (simple) */
+    .tools{display:flex; gap:8px; flex-wrap:wrap}
+    .tool{padding:8px; border-radius:8px; background:rgba(255,255,255,0.02); cursor:pointer; border:1px solid rgba(255,255,255,0.02)}
+    .tool.active{outline:3px solid rgba(124,58,237,0.18); box-shadow:0 6px 14px rgba(12,8,30,0.6)}
+    .footer {display:flex; gap:8px; justify-content:flex-end; align-items:center}
+
+    /* SVG demo area */
+    .svgPreview{
+      height:140px; border-radius:8px; overflow:hidden; position:relative;
+      display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#001022, #04122a);
+    }
+    .titleSmall {font-size:12px; color:#9fcfff; margin-bottom:6px}
+    .muted{color:#9fcfff; opacity:.6}
+    .hint {font-size:12px; color:#bfe6ff; opacity:.85}
+
+    @media(max-width:1080px){
+      .panel{width:100%; grid-template-columns: 1fr}
+      body{padding:14px}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="panel" role="application" aria-label="Neon Sketch Studio and SVG animation">
+    <!-- LEFT: Canvas Studio -->
+    <section class="studio card" aria-label="Canvas Studio">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <div>
+          <strong style="font-size:18px">Neon Sketch Studio</strong><div class="muted" style="font-size:13px">Draw, shape, save — modern ES6 canvas app</div>
+        </div>
+        <div class="hint">Shortcuts: <small>U = undo, C = clear, S = save</small></div>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="canvas" width="1280" height="720" aria-label="drawing canvas"></canvas>
+      </div>
+
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <div class="footer">
+          <button class="btn" id="saveBtn">Save as PNG</button>
+          <button class="ghost" id="clearBtn">Clear</button>
+          <button class="ghost" id="undoBtn">Undo</button>
+        </div>
+        <div class="muted">Canvas: <small id="sizeInfo">1280 × 720</small></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Controls + SVG -->
+    <aside class="controls">
+      <!-- Tools & Palette -->
+      <div class="card">
+        <div class="titleSmall">Tools</div>
+        <div class="tools" id="toolBar">
+          <div class="tool active" data-tool="brush" title="Brush">✏️ Brush</div>
+          <div class="tool" data-tool="eraser" title="Eraser">🧽 Eraser</div>
+          <div class="tool" data-tool="line" title="Straight Line">➖ Line</div>
+          <div class="tool" data-tool="rect" title="Rectangle">▭ Rect</div>
+          <div class="tool" data-tool="circle" title="Circle">◯ Circle</div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="row" style="align-items:center">
+          <label>Brush</label>
+          <input type="range" id="size" min="1" max="64" value="6" />
+          <small id="sizeVal" style="width:36px;text-align:right">6</small>
+        </div>
+
+        <div style="height:8px"></div>
+
+        <div class="row" style="align-items:center">
+          <label>Opacity</label>
+          <input type="range" id="opacity" min="0.05" max="1" step="0.05" value="1" />
+          <small id="opaVal" style="width:36px;text-align:right">1.00</small>
+        </div>
+
+        <div style="height:8px"></div>
+
+        <div>
+          <label>Palette</label>
+          <div class="palette" id="palette">
+            <!-- colors generated by JS -->
+          </div>
+        </div>
+
+        <div style="height:8px"></div>
+
+        <div class="row" style="align-items:center; margin-top:6px">
+          <label>Blend</label>
+          <select id="blend">
+            <option value="source-over">Normal</option>
+            <option value="lighter">Additive (glow)</option>
+            <option value="multiply">Multiply</option>
+            <option value="overlay">Overlay</option>
+            <option value="screen">Screen</option>
+          </select>
+          <div style="flex:1"></div>
+          <label>Save scale</label>
+          <select id="scale">
+            <option value="1">1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SVG Demo -->
+      <div class="card">
+        <div class="titleSmall">Aurora Comet SVG — Demo (Animated)</div>
+        <div class="svgPreview" id="svgPreview" aria-hidden="false">
+          <!-- Inline SVG -->
+          <svg id="auroraSVG" width="320" height="120" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1">
+                <stop offset="0" stop-color="#7c3aed" stop-opacity="1" />
+                <stop offset="1" stop-color="#06b6d4" stop-opacity="1" />
+              </linearGradient>
+              <filter id="fBlur">
+                <feGaussianBlur stdDeviation="6" result="b1"/>
+                <feBlend in="b1" in2="SourceGraphic" mode="screen"/>
+              </filter>
+            </defs>
+
+            <rect width="100%" height="100%" fill="transparent"></rect>
+
+            <!-- moving comets -->
+            <g id="cometLayer">
+              <!-- these circles will be animated by JS for unique motion -->
+            </g>
+
+            <!-- subtle aurora band -->
+            <path d="M0 70 C 40 40, 80 90, 160 62 C 240 34, 280 88, 320 70 L320 120 L0 120 Z"
+                  fill="url(#g1)" opacity="0.12" filter="url(#fBlur)"></path>
+          </svg>
+        </div>
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="btn" id="sparkBtn">Add Comet</button>
+          <button class="ghost" id="clearComets">Clear Comets</button>
+        </div>
+      </div>
+
+      <!-- Info / hints -->
+      <div class="card">
+        <div><strong>Deliverables</strong></div>
+        <ul style="margin:8px 0 0 18px;">
+          <li>Canvas drawing app (mouse & touch)</li>
+          <li>Clear / Undo / Save as image</li>
+          <li>SVG animation demo (comets)</li>
+          <li>All code in one file — ES6 features used</li>
+        </ul>
+        <div style="height:8px"></div>
+        <div class="muted">Tip: try 'Add Comet' and draw with blend = "lighter" for neon glow effects.</div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // =========================
+    // ES6-rich Canvas Sketch App
+    // =========================
+
+    const $ = sel => document.querySelector(sel);
+    const canvas = $('#canvas');
+    const ctx = canvas.getContext('2d');
+    const sizeInput = $('#size');
+    const sizeVal = $('#sizeVal');
+    const opaInput = $('#opacity');
+    const opaVal = $('#opaVal');
+    const paletteEl = $('#palette');
+    const blendSelect = $('#blend');
+    const saveBtn = $('#saveBtn');
+    const clearBtn = $('#clearBtn');
+    const undoBtn = $('#undoBtn');
+    const toolBar = $('#toolBar');
+    const stage = $('#stage');
+    const scaleSelect = $('#scale');
+
+    // State
+    let state = {
+      tool: 'brush',
+      color: '#7c3aed',
+      size: Number(sizeInput.value),
+      opacity: Number(opaInput.value),
+      blend: 'source-over',
+      drawing: false,
+      last: { x: 0, y: 0 },
+      undoStack: [],
+      maxUndo: 20
+    };
+
+    // Responsive canvas: fit to container while preserving internal resolution
+    const fitCanvas = () => {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = stage.getBoundingClientRect();
+      const w = Math.min(1280, Math.round(rect.width - 20));
+      const h = Math.round((w / 16) * 9); // 16:9
+      canvas.width = w * ratio;
+      canvas.height = h * ratio;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      updateSizeInfo();
+      // Redraw background grid / or reapply state snapshot
+      // If we have an existing snapshot, keep it (do nothing here)
+    };
+
+    // Helper: push undo snapshot
+    const pushUndo = () => {
+      try {
+        if (state.undoStack.length >= state.maxUndo) state.undoStack.shift();
+        state.undoStack.push(canvas.toDataURL());
+      } catch (e) { console.warn(e) }
+    };
+
+    // Undo
+    const undo = () => {
+      const last = state.undoStack.pop();
+      if (!last) {
+        clearCanvas(true);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+      };
+      img.src = last;
+    };
+
+    // Clear (optionally push undo)
+    const clearCanvas = (skipUndo=false) => {
+      if (!skipUndo) pushUndo();
+      ctx.clearRect(0,0,canvas.width, canvas.height);
+      // draw a soft background sentinel so transparent areas look nice in save
+      ctx.fillStyle = 'rgba(7,8,12,0.0)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    };
+
+    // Draw helpers
+    const getPointer = e => {
+      const r = canvas.getBoundingClientRect();
+      if (e.touches && e.touches[0]) {
+        return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+      }
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    const startDraw = (e) => {
+      e.preventDefault();
+      state.drawing = true;
+      state.last = getPointer(e);
+      if (['line','rect','circle'].includes(state.tool)) {
+        // begin snapshot for shape preview: store image
+        state._shapeBase = canvas.toDataURL();
+      } else {
+        pushUndo();
+      }
+      drawPoint(state.last.x, state.last.y); // dot on click
+    };
+
+    const endDraw = (e) => {
+      if (!state.drawing) return;
+      state.drawing = false;
+      if (['line','rect','circle'].includes(state.tool)) {
+        // finalize shape (no extra)
+        state._shapeBase = null;
+        pushUndo();
+      }
+    };
+
+    const drawPoint = (x,y) => {
+      ctx.globalCompositeOperation = state.blend;
+      ctx.globalAlpha = state.opacity;
+      if (state.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, state.size/2, 0, Math.PI*2);
+        ctx.fill();
+        return;
+      }
+      ctx.fillStyle = state.color;
+      ctx.beginPath();
+      ctx.arc(x, y, state.size/2, 0, Math.PI*2);
+      ctx.fill();
+    };
+
+    const drawLineSeg = (from, to) => {
+      ctx.globalCompositeOperation = state.blend;
+      ctx.globalAlpha = state.opacity;
+      if (state.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = state.size;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+        return;
+      }
+      ctx.strokeStyle = state.color;
+      ctx.lineWidth = state.size;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    };
+
+    const drawShapePreview = (start, current) => {
+      // restore base snapshot
+      if (state._shapeBase) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img,0,0, canvas.width/(window.devicePixelRatio||1), canvas.height/(window.devicePixelRatio||1));
+          // draw preview shape on top
+          ctx.globalCompositeOperation = state.blend;
+          ctx.globalAlpha = state.opacity;
+          ctx.strokeStyle = state.color;
+          ctx.fillStyle = state.color;
+          ctx.lineWidth = state.size;
+          const dx = current.x - start.x;
+          const dy = current.y - start.y;
+          if (state.tool === 'line') {
+            ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(current.x, current.y); ctx.stroke();
+          } else if (state.tool === 'rect') {
+            ctx.strokeRect(start.x, start.y, dx, dy);
+          } else if (state.tool === 'circle') {
+            const r = Math.hypot(dx, dy);
+            ctx.beginPath(); ctx.arc(start.x, start.y, r, 0, Math.PI*2); ctx.stroke();
+          }
+        };
+        img.src = state._shapeBase;
+      }
+    };
+
+    // Pointer move
+    const onMove = (e) => {
+      if (!state.drawing) return;
+      const p = getPointer(e);
+      if (['brush','eraser'].includes(state.tool)) {
+        const from = state.last; const to = p;
+        // draw many tiny arcs or continuous line
+        drawLineSeg(from, to);
+        state.last = to;
+      } else {
+        drawShapePreview(state.last, p);
+      }
+    };
+
+    // Attach events
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('touchstart', startDraw, {passive:false});
+    window.addEventListener('mouseup', endDraw);
+    window.addEventListener('touchend', endDraw);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('touchmove', onMove, {passive:false});
+
+    // UI Bindings
+    sizeInput.addEventListener('input', e => {
+      state.size = Number(e.target.value);
+      sizeVal.textContent = state.size;
+    });
+    opaInput.addEventListener('input', e => {
+      state.opacity = Number(e.target.value);
+      opaVal.textContent = Number(state.opacity).toFixed(2);
+    });
+    blendSelect.addEventListener('change', e => state.blend = e.target.value);
+    scaleSelect.addEventListener('change', () => {}); // used on saving
+
+    // Tool switching
+    toolBar.addEventListener('click', e => {
+      const t = e.target.closest('.tool');
+      if (!t) return;
+      [...toolBar.querySelectorAll('.tool')].forEach(el => el.classList.remove('active'));
+      t.classList.add('active');
+      state.tool = t.dataset.tool;
+    });
+
+    // Palette generation
+    const colors = ['#7c3aed','#06b6d4','#ff6b6b','#ffd166','#43aa8b','#e76f51','#b56576','#ffffff'];
+    colors.forEach(c => {
+      const s = document.createElement('div');
+      s.className = 'swatch';
+      s.style.background = c;
+      s.addEventListener('click', () => state.color = c);
+      paletteEl.appendChild(s);
+    });
+
+    // Save
+    saveBtn.addEventListener('click', () => {
+      const scale = Number(scaleSelect.value) || 1;
+      const w = canvas.width * scale / (window.devicePixelRatio||1);
+      const h = canvas.height * scale / (window.devicePixelRatio||1);
+      // create temp canvas to scale up
+      const tmp = document.createElement('canvas');
+      tmp.width = Math.round(w); tmp.height = Math.round(h);
+      const tctx = tmp.getContext('2d');
+      tctx.fillStyle = 'rgba(10,12,20,1)'; // background
+      tctx.fillRect(0,0,tmp.width,tmp.height);
+      // draw current at scale
+      const img = new Image();
+      img.onload = () => {
+        tctx.drawImage(img, 0, 0, tmp.width, tmp.height);
+        const a = document.createElement('a');
+        a.href = tmp.toDataURL('image/png');
+        a.download = `neon_sketch_${Date.now()}.png`;
+        a.click();
+      };
+      img.src = canvas.toDataURL('image/png');
+    });
+
+    // Clear/Undo
+    clearBtn.addEventListener('click', () => { pushUndo(); clearCanvas(true); });
+    undoBtn.addEventListener('click', undo);
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', e => {
+      if (e.key.toLowerCase() === 'u') undo();
+      if (e.key.toLowerCase() === 'c') { pushUndo(); clearCanvas(true); }
+      if (e.key.toLowerCase() === 's') { e.preventDefault(); saveBtn.click(); }
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => { fitCanvas(); // keep snapshot?
+      // optionally could restore from undo stack top
+    });
+
+    // Initial setup
+    fitCanvas();
+    clearCanvas(true);
+
+    // Utility: show size
+    function updateSizeInfo(){
+      const w = canvas.width / (window.devicePixelRatio||1);
+      const h = canvas.height / (window.devicePixelRatio||1);
+      $('#sizeInfo').textContent = `${Math.round(w)} × ${Math.round(h)}`;
+    }
+
+    // =========================
+    // SVG Animation — Aurora Comets
+    // =========================
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const cometLayer = document.getElementById('cometLayer');
+    const sparkBtn = $('#sparkBtn');
+    const clearCometsBtn = $('#clearComets');
+
+    // Random helpers
+    const rand = (a,b) => Math.random()*(b-a)+a;
+    const randInt = (a,b) => Math.floor(rand(a,b));
+
+    // Create a comet element with gradient tail and animation parameters
+    const createComet = (opts={}) => {
+      const { x=0, y=20, vx=1.2, vy=0.2, size=6, hue=randInt(180,300) } = opts;
+      // container group
+      const g = document.createElementNS(svgNS,'g');
+      // tail - multiple circles with decreasing opacity
+      for(let i=0;i<6;i++){
+        const c = document.createElementNS(svgNS,'circle');
+        c.setAttribute('r', Math.max(1, size*(0.8 - i*0.12)));
+        c.setAttribute('cx', x - i*8);
+        c.setAttribute('cy', y - i*2);
+        c.setAttribute('fill', `hsl(${hue} ${randInt(60,85)}% ${randInt(55,70)}%)`);
+        c.setAttribute('opacity', (0.7 - i*0.1).toFixed(2));
+        g.appendChild(c);
+      }
+      // head
+      const head = document.createElementNS(svgNS,'circle');
+      head.setAttribute('r', size);
+      head.setAttribute('cx', x);
+      head.setAttribute('cy', y);
+      head.setAttribute('fill', `hsl(${hue} 90% 62%)`);
+      head.setAttribute('filter', 'url(#fBlur)');
+      g.appendChild(head);
+
+      // initial state & physics
+      const comet = {
+        g, vx: vx * (Math.random()>0.5?1:-1), vy: vy * (Math.random()*0.8+0.2),
+        life: randInt(2000,5200), age:0, x, y, size, hue
+      };
+      g.comet = comet;
+      cometLayer.appendChild(g);
+      return comet;
+    };
+
+    // Update loop (requestAnimationFrame)
+    const comets = new Set();
+    let lastTime = performance.now();
+    const animateComets = (t) => {
+      const dt = t - lastTime; lastTime = t;
+      // update each comet
+      for(const c of comets){
+        c.age += dt;
+        // move
+        c.x += c.vx * dt * 0.02;
+        c.y += c.vy * dt * 0.02 + Math.sin((c.age/300)+c.size)*0.2;
+        // set positions of children (tail circles)
+        const nodes = c.g.querySelectorAll('circle');
+        let i = 0;
+        for(const n of nodes){
+          const offset = i*8;
+          n.setAttribute('cx', (c.x - offset).toFixed(2));
+          n.setAttribute('cy', (c.y - i*1.4 - Math.sin((c.age/400)+i)*1.4).toFixed(2));
+          i++;
+        }
+        // fade out as age approaches life
+        const tfrac = c.age / c.life;
+        if (tfrac > 0.7){
+          const alpha = Math.max(0, 1 - (tfrac - 0.7) / 0.3);
+          c.g.style.opacity = alpha;
+        }
+        // remove if out of bounds or dead
+        const bbox = c.g.getBBox();
+        if (c.age > c.life || bbox.x < -80 || bbox.x > 420 || bbox.y < -80 || bbox.y > 240) {
+          comets.delete(c);
+          c.g.remove();
+        }
+      }
+      requestAnimationFrame(animateComets);
+    };
+
+    // Add new comet to scene
+    sparkBtn.addEventListener('click', () => {
+      // spawn at random near top-left or top-right
+      const startX = rand(20, 300);
+      const startY = rand(10, 50);
+      const comet = createComet({ x: startX, y: startY, vx: rand(0.8,2.0)*(Math.random()>0.5?1:-1), vy: rand(0.05,0.7), size: randInt(3,9), hue: randInt(180,300) });
+      comets.add(comet);
+    });
+
+    clearCometsBtn.addEventListener('click', () => {
+      for(const c of comets){ c.g.remove(); }
+      comets.clear();
+    });
+
+    // Auto spawn some comets for delight
+    for(let i=0;i<6;i++){ sparkBtn.click(); }
+
+    requestAnimationFrame(animateComets);
+
+    // Final touches: expose some functions for console (optional)
+    window.LAB11 = {
+      addComet: () => sparkBtn.click(),
+      clearComets: () => clearCometsBtn.click(),
+      undo, clearCanvas
+    };
+
+    // Accessibility / small polish: keyboard nav for tools
+    document.addEventListener('keydown', e => {
+      if (e.key === '1') document.querySelector('[data-tool="brush"]').click();
+      if (e.key === '2') document.querySelector('[data-tool="eraser"]').click();
+      if (e.key === '3') document.querySelector('[data-tool="line"]').click();
+    });
+
+  </script>
+</body>
+</html>
