@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lab 11 - Complete SVG Demo</title>
+<style>
+  body { font-family: Arial; background: #222; color: #fff; padding: 20px; }
+  h2 { color: #06b6d4; }
+  svg { margin: 15px 0; border: 1px solid #555; background: #111; display: block; }
+</style>
+</head>
+<body>
+
+<h1>Lab 11 - Complete SVG Demo (1-27)</h1>
+
+<h2>1. SVG Intro & Basic Structure</h2>
+<svg width="300" height="200">
+  <!-- SVG elements go here -->
+</svg>
+
+<h2>2. SVG Rectangle</h2>
+<svg width="300" height="200">
+  <rect x="50" y="30" width="200" height="100" fill="lightblue" stroke="black" stroke-width="3"/>
+</svg>
+
+<h2>3. SVG Circle</h2>
+<svg width="200" height="200">
+  <circle cx="100" cy="100" r="50" fill="yellow" stroke="black" stroke-width="3"/>
+</svg>
+
+<h2>4. SVG Ellipse</h2>
+<svg width="300" height="200">
+  <ellipse cx="150" cy="100" rx="100" ry="50" fill="pink" stroke="black" stroke-width="3"/>
+</svg>
+
+<h2>5. SVG Line</h2>
+<svg width="300" height="200">
+  <line x1="50" y1="50" x2="250" y2="150" stroke="blue" stroke-width="4"/>
+</svg>
+
+<h2>6. SVG Polygon</h2>
+<svg width="300" height="200">
+  <polygon points="50,150 150,50 250,150" fill="lime" stroke="black" stroke-width="3"/>
+</svg>
+
+<h2>7. SVG Polyline</h2>
+<svg width="300" height="200">
+  <polyline points="50,150 150,50 250,150 300,50" fill="none" stroke="red" stroke-width="3"/>
+</svg>
+
+<h2>8. SVG Path</h2>
+<svg width="300" height="200">
+  <path d="M50 150 L150 50 L250 150 Z" fill="orange" stroke="black" stroke-width="3"/>
+</svg>
+
+<h2>9. SVG Text / tspan</h2>
+<svg width="300" height="200">
+  <text x="50" y="100" font-size="24" fill="blue">Hello SVG</text>
+</svg>
+
+<h2>10. SVG TextPath</h2>
+<svg width="400" height="200">
+  <path id="curve" d="M50 150 Q150 50 250 150" fill="transparent" stroke="gray"/>
+  <text>
+    <textPath href="#curve">Text along a curve</textPath>
+  </text>
+</svg>
+
+<h2>11. SVG Links</h2>
+<svg width="300" height="200">
+  <a href="https://example.com" target="_blank">
+    <text x="50" y="100" font-size="24" fill="blue">Click Me</text>
+  </a>
+</svg>
+
+<h2>12. SVG Image</h2>
+<svg width="300" height="200">
+  <image href="https://via.placeholder.com/150" x="75" y="25" width="150" height="150"/>
+</svg>
+
+<h2>13. SVG Marker (Arrow)</h2>
+<svg width="300" height="200">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="red"/>
+    </marker>
+  </defs>
+  <line x1="50" y1="50" x2="250" y2="150" stroke="blue" stroke-width="4" marker-end="url(#arrow)"/>
+</svg>
+
+<h2>14. SVG Linear Gradient Fill</h2>
+<svg width="300" height="200">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:blue"/>
+      <stop offset="100%" style="stop-color:green"/>
+    </linearGradient>
+  </defs>
+  <rect x="50" y="30" width="200" height="100" fill="url(#grad1)"/>
+</svg>
+
+<h2>15. SVG Stroke</h2>
+<svg width="300" height="200">
+  <circle cx="150" cy="100" r="80" fill="none" stroke="purple" stroke-width="10" stroke-dasharray="10,5"/>
+</svg>
+
+<h2>16. SVG Blur Filter</h2>
+<svg width="300" height="200">
+  <defs>
+    <filter id="blurFilter">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5"/>
+    </filter>
+  </defs>
+  <circle cx="150" cy="100" r="80" fill="orange" filter="url(#blurFilter)"/>
+</svg>
+
+<h2>17. SVG Drop Shadow</h2>
+<svg width="300" height="200">
+  <defs>
+    <filter id="dropShadow">
+      <feDropShadow dx="5" dy="5" stdDeviation="3" flood-color="gray"/>
+    </filter>
+  </defs>
+  <circle cx="100" cy="100" r="50" fill="orange" filter="url(#dropShadow)"/>
+</svg>
+
+<h2>18. SVG Alternative Drop Shadow</h2>
+<svg width="300" height="200">
+  <defs>
+    <filter id="shadowBlur">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="4" dy="4" result="offsetblur"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect x="50" y="50" width="150" height="100" fill="lightblue" filter="url(#shadowBlur)"/>
+</svg>
+
+<h2>19. SVG Linear Gradient</h2>
+<svg width="300" height="200">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:red"/>
+      <stop offset="100%" style="stop-color:yellow"/>
+    </linearGradient>
+  </defs>
+  <rect x="50" y="50" width="200" height="100" fill="url(#grad2)"/>
+</svg>
+
+<h2>20. SVG Radial Gradient</h2>
+<svg width="300" height="200">
+  <defs>
+    <radialGradient id="radGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:white"/>
+      <stop offset="100%" style="stop-color:blue"/>
+    </radialGradient>
